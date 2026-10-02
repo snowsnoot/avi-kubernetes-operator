@@ -156,11 +156,11 @@ func (o *AviObjectGraph) ConstructAviL4VsNode(svcObj *corev1.Service, key string
 	}
 
 	if lib.HasSpecLoadBalancerIP(svcObj) {
-		vsVipNode.IPAddress = svcObj.Spec.LoadBalancerIP
+		vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(svcObj.Spec.LoadBalancerIP)
 	} else if lib.HasLoadBalancerIPAnnotation(svcObj) {
-		vsVipNode.IPAddress = svcObj.Annotations[lib.LoadBalancerIP]
+		vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(svcObj.Annotations[lib.LoadBalancerIP])
 	} else if avi_vs_meta.LoadBalancerIP != nil {
-		vsVipNode.IPAddress = *avi_vs_meta.LoadBalancerIP
+		vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(*avi_vs_meta.LoadBalancerIP)
 	}
 
 	avi_vs_meta.VSVIPRefs = append(avi_vs_meta.VSVIPRefs, vsVipNode)

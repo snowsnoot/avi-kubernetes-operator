@@ -107,7 +107,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
-	sudo docker build \
+	docker build \
 	--platform linux/amd64 \
     -t ${IMG} \
     --label "BUILD_TAG=${BUILD_TAG}" \

@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"regexp"
 	"strings"
 	"sync"
@@ -803,4 +804,45 @@ func IsNamespaceUpdated(oldNS, newNS *corev1.Namespace) bool {
 	oldTenant := oldNS.Annotations[TenantAnnotation]
 	newTenant := newNS.Annotations[TenantAnnotation]
 	return oldLabelHash != newLabelHash || oldTenant != newTenant
+}
+
+// Takes a string which is either an IPv4, IPv6 or comma separated
+// IPv4 + IPv6 address (in any order) and returns the IPv4 address
+// followed by the IPv6 address, and nil for any other type.
+func ParseIpString(addr string) (string, string) {
+	trimmed := strings.TrimSpace(addr)
+	parts := strings.Split(trimmed, ",")
+
+	if len(parts) < 1 || len(parts) > 2 {
+		return "", ""
+	}
+
+	if len(parts) == 1 {
+		ip := net.ParseIP(parts[0])
+
+		if ip != nil {
+			if ip.To4() != nil {
+				return parts[0], ""
+			} else {
+				return "", parts[0]
+			}
+		}
+		return "", ""
+	}
+
+	if len(parts) == 2 {
+		first := net.ParseIP(parts[0])
+		second := net.ParseIP(parts[1])
+
+		if first != nil && second != nil {
+			if first.To4() != nil && second.To4() == nil {
+				return parts[0], parts[1]
+			}
+			if first.To4() == nil && second.To4() != nil {
+				return parts[1], parts[0]
+			}
+		}
+		return "", ""
+	}
+	return "", ""
 }

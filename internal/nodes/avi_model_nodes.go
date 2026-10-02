@@ -613,14 +613,24 @@ func (v *AviVsNode) SetAnalyticsPolicy(policy *avimodels.AnalyticsPolicy) {
 
 func (v *AviVsNode) GetVSVIPLoadBalancerIP() string {
 	if len(v.VSVIPRefs) > 0 {
-		return v.VSVIPRefs[0].IPAddress
+		if v.VSVIPRefs[0].IPv4Address != "" {
+			return v.VSVIPRefs[0].IPv4Address
+		} else if v.VSVIPRefs[0].IPv6Address != "" {
+			return v.VSVIPRefs[0].IPv6Address
+		}
 	}
 	return ""
 }
 
 func (v *AviVsNode) SetVSVIPLoadBalancerIP(ip string) {
 	if len(v.VSVIPRefs) > 0 {
-		v.VSVIPRefs[0].IPAddress = ip
+		v4, v6 := lib.ParseIpString(ip)
+		if v4 != "" {
+			v.VSVIPRefs[0].IPv4Address = v4
+		}
+		if v6 != "" {
+			v.VSVIPRefs[0].IPv6Address = v6
+		}
 	}
 }
 
@@ -1348,7 +1358,8 @@ type AviVSVIPNode struct {
 	CloudConfigCksum        uint32
 	FQDNs                   []string
 	VrfContext              string
-	IPAddress               string
+	IPv4Address             string
+	IPv6Address             string
 	VipNetworks             []akov1beta1.AviInfraSettingVipNetwork
 	EnablePublicIP          *bool
 	BGPPeerLabels           []string
@@ -1371,8 +1382,12 @@ func (v *AviVSVIPNode) CalculateCheckSum() {
 		checksum = utils.Hash(utils.Stringify(v.FQDNs))
 	}
 
-	if v.IPAddress != "" {
-		checksum += utils.Hash(v.IPAddress)
+	if v.IPv4Address != "" {
+		checksum += utils.Hash(v.IPv4Address)
+	}
+
+	if v.IPv6Address != "" {
+		checksum += utils.Hash(v.IPv6Address)
 	}
 
 	if len(v.VipNetworks) > 0 {

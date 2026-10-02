@@ -186,10 +186,20 @@ func (o *AviObjectGraph) ConstructAdvL4VsNode(gatewayName, namespace, key string
 	}
 
 	if len(gw.Spec.Addresses) > 0 && gw.Spec.Addresses[0].Type == advl4v1alpha1pre1.IPAddressType {
-		vsVipNode.IPAddress = gw.Spec.Addresses[0].Value
+
+		if len(gw.Spec.Addresses) == 1 {
+			vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(gw.Spec.Addresses[0].Value)
+		}
+
+		if len(gw.Spec.Addresses) == 2 {
+			ipCsv := gw.Spec.Addresses[0].Value + "," + gw.Spec.Addresses[1].Value
+			vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(ipCsv)
+		}
+
 	} else if avi_vs_meta.LoadBalancerIP != nil {
-		vsVipNode.IPAddress = *avi_vs_meta.LoadBalancerIP
+		vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(*avi_vs_meta.LoadBalancerIP)
 	}
+
 	avi_vs_meta.VSVIPRefs = append(avi_vs_meta.VSVIPRefs, vsVipNode)
 	return avi_vs_meta
 }
@@ -324,8 +334,12 @@ func (o *AviObjectGraph) ConstructSvcApiL4VsNode(gatewayName, namespace, key str
 	// configures VS and VsVip nodes using infraSetting object (via CRD).
 	buildWithInfraSetting(key, namespace, avi_vs_meta, vsVipNode, infraSetting)
 
-	if len(gw.Spec.Addresses) > 0 && gw.Spec.Addresses[0].Type == svcapiv1alpha1.IPAddressType {
-		vsVipNode.IPAddress = gw.Spec.Addresses[0].Value
+	if len(gw.Spec.Addresses) == 1 && gw.Spec.Addresses[0].Type == svcapiv1alpha1.IPAddressType {
+		vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(gw.Spec.Addresses[0].Value)
+
+	} else if len(gw.Spec.Addresses) == 2 {
+		ipCsv := gw.Spec.Addresses[0].Value + "," + gw.Spec.Addresses[1].Value
+		vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(ipCsv)
 	}
 
 	avi_vs_meta.VSVIPRefs = append(avi_vs_meta.VSVIPRefs, vsVipNode)
@@ -595,7 +609,7 @@ func (o *AviObjectGraph) ConstructSharedVipSvcLBNode(sharedVipKey, namespace, ke
 	}
 
 	if sharedPreferredVIP != "" {
-		vsVipNode.IPAddress = sharedPreferredVIP
+		vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(sharedPreferredVIP)
 	}
 
 	if avi_vs_meta.EnableRhi != nil && *avi_vs_meta.EnableRhi {
@@ -622,7 +636,7 @@ func (o *AviObjectGraph) ConstructSharedVipSvcLBNode(sharedVipKey, namespace, ke
 
 			// Copy the LoadBalancerIP if configured in L4Rule CRD.
 			if avi_vs_meta.LoadBalancerIP != nil {
-				vsVipNode.IPAddress = *avi_vs_meta.LoadBalancerIP
+				vsVipNode.IPv4Address, vsVipNode.IPv6Address = lib.ParseIpString(*avi_vs_meta.LoadBalancerIP)
 			}
 		}
 	}

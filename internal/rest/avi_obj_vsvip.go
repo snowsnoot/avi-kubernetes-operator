@@ -31,6 +31,7 @@ import (
 	"github.com/vmware/load-balancer-and-ingress-services-for-kubernetes/pkg/utils"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/vmware/alb-sdk/go/models"
 	avimodels "github.com/vmware/alb-sdk/go/models"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
@@ -50,6 +51,34 @@ func GetIPAMProviderType() string {
 		return ""
 	}
 	return cloudProperty.IPAMType
+}
+
+func UpdateAutoAllocateIPType(vsvip_meta *nodes.AviVSVIPNode, vip *models.Vip) {
+	autoAllocateTypeV4 := lib.IPTypeV4Only
+	autoAllocateTypeV6 := lib.IPTypeV6Only
+	autoAllocateTypeV4V6 := lib.IPTypeV4V6
+
+	if vsvip_meta.IPv4Address != "" && vsvip_meta.IPv6Address == "" {
+		vip.AutoAllocateIPType = &autoAllocateTypeV4
+	}
+
+	if vsvip_meta.IPv4Address == "" && vsvip_meta.IPv6Address != "" {
+		vip.AutoAllocateIPType = &autoAllocateTypeV6
+	}
+
+	if vsvip_meta.IPv4Address != "" && vsvip_meta.IPv6Address != "" {
+		vip.AutoAllocateIPType = &autoAllocateTypeV4V6
+	}
+
+	if vsvip_meta.IPv4Address == "" && vsvip_meta.IPv6Address == "" {
+		for _, network := range vsvip_meta.VipNetworks {
+			if network.V6Cidr != "" {
+				vip.AutoAllocateIPType = &autoAllocateTypeV4V6
+				break
+			}
+		}
+	}
+
 }
 
 func (rest *RestOperations) AviVsVipBuild(vsvip_meta *nodes.AviVSVIPNode, vsCache *avicache.AviVsCache, cache_obj *avicache.AviVSVIPCache, key string) (*utils.RestOp, error) {
@@ -105,13 +134,13 @@ func (rest *RestOperations) AviVsVipBuild(vsvip_meta *nodes.AviVSVIPNode, vsCach
 			}
 
 			// This would throw an error for advl4 the error is propagated to the gateway status.
-			if vsvip_meta.IPAddress != "" {
-				if utils.IsV4(vsvip_meta.IPAddress) {
-					vip.IPAddress = &avimodels.IPAddr{Type: &ipType, Addr: &vsvip_meta.IPAddress}
-				} else {
-					vip.Ip6Address = &avimodels.IPAddr{Type: &ip6Type, Addr: &vsvip_meta.IPAddress}
-				}
+			if vsvip_meta.IPv4Address != "" {
+				vip.IPAddress = &avimodels.IPAddr{Type: &ipType, Addr: &vsvip_meta.IPv4Address}
 			}
+			if vsvip_meta.IPv6Address != "" {
+				vip.Ip6Address = &avimodels.IPAddr{Type: &ip6Type, Addr: &vsvip_meta.IPv6Address}
+			}
+			UpdateAutoAllocateIPType(vsvip_meta, vip)
 
 			if lib.IsPublicCloud() && lib.GetCloudType() != lib.CLOUD_GCP {
 				vips := networkNamesToVips(vsvip_meta.VipNetworks, vsvip_meta.EnablePublicIP)
@@ -142,9 +171,7 @@ func (rest *RestOperations) AviVsVipBuild(vsvip_meta *nodes.AviVSVIPNode, vsCach
 					}
 					vip.IPAMNetworkSubnet.NetworkRef = &networkRef
 					utils.AviLog.Debugf("Network: %s Network ref in rest layer: %s", vsvip_meta.VipNetworks[0].NetworkName, *vip.IPAMNetworkSubnet.NetworkRef)
-					if vsvip_meta.VipNetworks[0].V6Cidr != "" {
-						lib.UpdateV6(vip, &vsvip_meta.VipNetworks[0])
-					}
+
 					if lib.GetCloudType() == lib.CLOUD_NSXT &&
 						lib.GetNSXTTransportZone() == lib.VLAN_TRANSPORT_ZONE {
 						setVipPlacementNetwork(vip, vsvip_meta.VipNetworks[0].Cidr, &networkRef)
@@ -185,13 +212,13 @@ func (rest *RestOperations) AviVsVipBuild(vsvip_meta *nodes.AviVSVIPNode, vsCach
 		}
 
 		// configuring static IP, from gateway.Addresses (advl4, svcapi) and service.loadBalancerIP (l4)
-		if vsvip_meta.IPAddress != "" {
-			if utils.IsV4(vsvip_meta.IPAddress) {
-				vip.IPAddress = &avimodels.IPAddr{Type: &ipType, Addr: &vsvip_meta.IPAddress}
-			} else {
-				vip.Ip6Address = &avimodels.IPAddr{Type: &ip6Type, Addr: &vsvip_meta.IPAddress}
-			}
+		if vsvip_meta.IPv4Address != "" {
+			vip.IPAddress = &avimodels.IPAddr{Type: &ipType, Addr: &vsvip_meta.IPv4Address}
 		}
+		if vsvip_meta.IPv6Address != "" {
+			vip.Ip6Address = &avimodels.IPAddr{Type: &ip6Type, Addr: &vsvip_meta.IPv6Address}
+		}
+		UpdateAutoAllocateIPType(vsvip_meta, &vip)
 
 		// selecting network with user input, in case user input is not provided AKO relies on
 		// usable network configuration in ipamdnsproviderprofile
@@ -248,9 +275,6 @@ func (rest *RestOperations) AviVsVipBuild(vsvip_meta *nodes.AviVSVIPNode, vsCach
 						setVipPlacementNetwork(&vip, vipNetwork.Cidr, &networkRef)
 
 					}
-				}
-				if vipNetwork.V6Cidr != "" {
-					lib.UpdateV6(&vip, &vipNetwork)
 				}
 			}
 		}
@@ -733,9 +757,6 @@ func networkNamesToVips(vipNetworks []akov1beta1.AviInfraSettingVipNetwork, enab
 		}
 		newVip.SubnetUUID = proto.String(vipNetwork.NetworkName)
 		vipList = append(vipList, newVip)
-		if vipNetwork.V6Cidr != "" {
-			lib.UpdateV6(newVip, &vipNetwork)
-		}
 	}
 
 	return vipList

@@ -226,8 +226,11 @@ func BuildVsVipNodeForGateway(key string, gateway *gatewayv1.Gateway, parentVsNo
 	//Type is validated at ingestion
 	if len(gateway.Spec.Addresses) == 1 {
 		ipAddr := gateway.Spec.Addresses[0].Value
-		if net.IsIPv4String(ipAddr) || net.IsIPv6String(ipAddr) {
-			vsvipNode.IPAddress = ipAddr
+		if net.IsIPv4String(ipAddr) {
+			vsvipNode.IPv4Address = ipAddr
+		}
+		if net.IsIPv6String(ipAddr) {
+			vsvipNode.IPv6Address = ipAddr
 		}
 	}
 

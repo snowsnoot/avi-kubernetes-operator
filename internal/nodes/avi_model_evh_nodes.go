@@ -322,14 +322,23 @@ func (v *AviEvhVsNode) SetAnalyticsPolicy(policy *avimodels.AnalyticsPolicy) {
 
 func (v *AviEvhVsNode) GetVSVIPLoadBalancerIP() string {
 	if len(v.VSVIPRefs) > 0 {
-		return v.VSVIPRefs[0].IPAddress
+		if v.VSVIPRefs[0].IPv4Address != "" {
+			return v.VSVIPRefs[0].IPv4Address
+		} else if v.VSVIPRefs[0].IPv6Address != "" {
+			return v.VSVIPRefs[0].IPv6Address
+		}
 	}
 	return ""
 }
 
 func (v *AviEvhVsNode) SetVSVIPLoadBalancerIP(ip string) {
 	if len(v.VSVIPRefs) > 0 {
-		v.VSVIPRefs[0].IPAddress = ip
+		v4, v6 := lib.ParseIpString(ip)
+		if v4 != "" {
+			v.VSVIPRefs[0].IPv4Address = ip
+		} else if v6 != "" {
+			v.VSVIPRefs[0].IPv6Address = ip
+		}
 	}
 }
 

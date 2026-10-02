@@ -2206,14 +2206,6 @@ func GetThrottle(key string) *uint32 {
 	return &throttle
 }
 
-func UpdateV6(vip *models.Vip, vipNetwork *akov1beta1.AviInfraSettingVipNetwork) {
-	if vipNetwork.Cidr != "" {
-		vip.AutoAllocateIPType = proto.String("V4_V6")
-	} else {
-		vip.AutoAllocateIPType = proto.String("V6_ONLY")
-	}
-}
-
 var IPfamily string
 
 func SetIPFamily() {

@@ -71,7 +71,7 @@ all: build docker
 # builds
 .PHONY: build
 build: glob-vars
-		sudo docker run \
+		docker run \
 		-w=/go/src/$(PACKAGE_PATH_AKO) \
 		-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(BUILD_GO_IMG) \
 		$(GOBUILD) \
@@ -82,7 +82,7 @@ build: glob-vars
 
 .PHONY: build-infra
 build-infra: glob-vars
-		sudo docker run \
+		docker run \
 		-w=/go/src/$(PACKAGE_PATH_AKO) \
 		-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(BUILD_GO_IMG) \
 		$(GOBUILD) \
@@ -93,7 +93,7 @@ build-infra: glob-vars
 
 .PHONY: build-gateway-api
 build-gateway-api: glob-vars
-		sudo docker run \
+		docker run \
 		-w=/go/src/$(PACKAGE_PATH_AKO) \
 		-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(BUILD_GO_IMG) \
 		$(GOBUILD) \
@@ -138,7 +138,7 @@ deps:
 # docker images
 .PHONY: docker
 docker: glob-vars
-	sudo docker build \
+	docker build \
 	-t $(BINARY_NAME_AKO):latest \
 	--label "BUILD_TAG=$(BUILD_TAG)" \
 	--label "BUILD_TIME=$(BUILD_TIME)" \
@@ -147,7 +147,7 @@ docker: glob-vars
 
 .PHONY: ako-infra-docker
 ako-infra-docker: glob-vars
-	sudo docker build \
+	docker build \
 	-t $(BINARY_NAME_AKO_INFRA):latest \
 	--label "BUILD_TAG=$(BUILD_TAG)" \
 	--label "BUILD_TIME=$(BUILD_TIME)" \
@@ -156,7 +156,7 @@ ako-infra-docker: glob-vars
 
 .PHONY: ako-operator-docker
 ako-operator-docker: glob-vars
-	sudo docker build \
+	docker build \
 	-t $(AKO_OPERATOR_IMAGE):latest \
 	--label "BUILD_TAG=$(BUILD_TAG)" \
 	--label "BUILD_TIME=$(BUILD_TIME)" \
@@ -182,7 +182,7 @@ ako-crd-operator-docker-build: glob-vars
 
 .PHONY: ako-gateway-api-docker
 ako-gateway-api-docker: glob-vars
-	sudo docker build \
+	docker build \
 	-t $(BINARY_NAME_AKO_GATEWAY_API):latest \
 	--label "BUILD_TAG=$(BUILD_TAG)" \
 	--label "BUILD_TIME=$(BUILD_TIME)" \
@@ -193,7 +193,7 @@ ako-gateway-api-docker: glob-vars
 .PHONY: k8stest
 k8stest:
 	@> k8s_test.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/k8stest -failfast -timeout 0 \
@@ -203,7 +203,7 @@ k8stest:
 .PHONY: integrationtest
 integrationtest:
 	@> integrationtest.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/integrationtest -failfast -timeout 0 -coverprofile cover-2.out -coverpkg=./...  > integrationtest.log 2>&1 && echo "integrationtest passed") || (echo "integrationtest failed" && cat integrationtest.log && exit 1)
@@ -211,7 +211,7 @@ integrationtest:
 .PHONY: ingresstests
 ingresstests:
 	@> ingresstests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/ingresstests -failfast -timeout 0 -coverprofile cover-3.out -coverpkg=./... > ingresstests.log 2>&1 && echo "ingresstests passed") || (echo "ingresstests failed" && cat ingresstests.log && exit 1)
@@ -219,7 +219,7 @@ ingresstests:
 .PHONY: oshiftroutetests
 oshiftroutetests:
 	@> oshiftroutetests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/oshiftroutetests -failfast -timeout 0 \
@@ -229,7 +229,7 @@ oshiftroutetests:
 .PHONY: bootuptests
 bootuptests:
 	@> bootuptests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/bootuptests -failfast -timeout 0 \
@@ -238,7 +238,7 @@ bootuptests:
 .PHONY: multicloudtests
 multicloudtests:
 	@> multicloudtests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/multicloudtests -failfast -timeout 0 \
@@ -247,7 +247,7 @@ multicloudtests:
 .PHONY: servicesapitests
 servicesapitests:
 	@> servicesapitests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/servicesapitests -failfast -timeout 0 \
@@ -256,7 +256,7 @@ servicesapitests:
 .PHONY: advl4tests
 advl4tests:
 	@> advl4tests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/advl4tests -failfast -timeout 0 \
@@ -265,7 +265,7 @@ advl4tests:
 .PHONY: namespacesynctests 
 namespacesynctests:
 	@> namespacesynctests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/namespacesynctests -failfast -timeout 0 \
@@ -275,7 +275,7 @@ namespacesynctests:
 .PHONY: npltests 
 npltests:
 	@> npltests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/npltests -failfast -timeout 0 \
@@ -284,7 +284,7 @@ npltests:
 .PHONY: evhtests 
 evhtests:
 	@> evhtests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/evhtests -failfast -timeout 0 \
@@ -293,7 +293,7 @@ evhtests:
 .PHONY: vippernstests
 vippernstests:
 	@> vippernstests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/evhtests -failfast -timeout 0 -isVipPerNS=true \
@@ -302,7 +302,7 @@ vippernstests:
 .PHONY: dedicatedevhtests
 dedicatedevhtests:
 	@> dedicatedevhtests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/dedicatedevhtests -failfast -timeout 0 \
@@ -311,7 +311,7 @@ dedicatedevhtests:
 .PHONY: dedicatedvippernstests
 dedicatedvippernstests:
 	@> dedicatedvippernstests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/dedicatedevhtests -failfast -timeout 0 -isVipPerNS=true \
@@ -320,7 +320,7 @@ dedicatedvippernstests:
 .PHONY: dedicatedvstests
 dedicatedvstests:
 	@> dedicatedvstests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/dedicatedvstests -failfast -timeout 0 \
@@ -329,7 +329,7 @@ dedicatedvstests:
 .PHONY: infratests
 infratests:
 	@> infratests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/infratests -failfast -timeout 0 \
@@ -338,7 +338,7 @@ infratests:
 .PHONY: hatests
 hatests:
 	@> hatests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/hatests -failfast -timeout 0 \
@@ -347,7 +347,7 @@ hatests:
 .PHONY: calicotests
 calicotests:
 	@> calicotests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/cnitests -failfast -timeout 0 -cniPlugin=calico \
@@ -356,7 +356,7 @@ calicotests:
 .PHONY: ciliumtests
 ciliumtests:
 	@> ciliumtests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/cnitests -failfast -timeout 0 -cniPlugin=cilium \
@@ -365,7 +365,7 @@ ciliumtests:
 .PHONY: helmtests
 helmtests:
 	@> helmtests.log
-	(sudo docker run \
+	(docker run \
 	-u root:root \
 	-v $(PWD)/helm/ako:/apps \
 	-v $(PWD)/tests/helmtests:/apps/tests \
@@ -374,7 +374,7 @@ helmtests:
 .PHONY: gatewayapi_ingestiontests
 gatewayapi_ingestiontests:
 	@> gatewayapi_ingestiontests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/gatewayapitests/ingestion -failfast -timeout 0 \
@@ -383,7 +383,7 @@ gatewayapi_ingestiontests:
 .PHONY: gatewayapi_graphlayertests
 gatewayapi_graphlayertests:
 	@> gatewayapi_graphlayertests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/gatewayapitests/graphlayer -failfast -timeout 0 \
@@ -392,7 +392,7 @@ gatewayapi_graphlayertests:
 .PHONY: gatewayapi_statustests
 gatewayapi_statustests:
 	@> gatewayapi_statustests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/gatewayapitests/status -failfast -timeout 0 \
@@ -401,7 +401,7 @@ gatewayapi_statustests:
 .PHONY: gatewayapi_npltests
 gatewayapi_npltests:
 	@> gatewayapi_npltests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/gatewayapitests/npltests -failfast -timeout 0 \
@@ -410,7 +410,7 @@ gatewayapi_npltests:
 .PHONY: gatewayapi_infrasettingtests
 gatewayapi_infrasettingtests:
 	@> gatewayapi_infrasettingtests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/gatewayapitests/crd -failfast -timeout 0 \
@@ -419,7 +419,7 @@ gatewayapi_infrasettingtests:
 .PHONY: gatewayapi_multitenancytests
 gatewayapi_multitenancytests:
 	@> gatewayapi_multitenancytests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/gatewayapitests/multitenancy -failfast -timeout 0 \
@@ -428,7 +428,7 @@ gatewayapi_multitenancytests:
 .PHONY: multitenancytests
 multitenancytests:
 	@> multitenancytests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/multitenancytests -failfast -timeout 0 -coverprofile cover-24.out -coverpkg=./... > multitenancytests.log 2>&1 && echo "multitenancytests passed") || (echo "multitenancytests failed" && cat multitenancytests.log && exit 1)
@@ -436,7 +436,7 @@ multitenancytests:
 .PHONY: urltests
 urltests:
 	@> urltests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/urltests -failfast -coverprofile cover-25.out -coverpkg=./... > urltests.log 2>&1 && echo "urltests passed") || (echo "urltests failed" && cat urltests.log && exit 1)
@@ -449,7 +449,7 @@ gatewayapi_tests:
 .PHONY: informers_tests
 informers_tests:
 	@> informers_tests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(INFORMERS_PACKAGES)  -failfast -timeout 0 \
@@ -458,7 +458,7 @@ informers_tests:
 .PHONY: vks_addon_controller_tests
 vks_addon_controller_tests:
 	@> vks_addon_controller_tests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/ako-infra/addon -failfast -timeout 0 \
@@ -467,7 +467,7 @@ vks_addon_controller_tests:
 .PHONY: vks_cluster_webhook_tests
 vks_cluster_webhook_tests:
 	@> vks_cluster_webhook_tests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/ako-infra/webhook -failfast -timeout 0 \
@@ -476,7 +476,7 @@ vks_cluster_webhook_tests:
 .PHONY: vks_cluster_watcher_tests
 vks_cluster_watcher_tests:
 	@> vks_cluster_watcher_tests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/ako-infra/ingestion -failfast -timeout 0 \
@@ -485,7 +485,7 @@ vks_cluster_watcher_tests:
 .PHONY: avi_rbac_tests
 avi_rbac_tests:
 	@> avi_rbac_tests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/internal/lib -run "Test.*" -failfast -timeout 0 \
@@ -494,7 +494,7 @@ avi_rbac_tests:
 .PHONY: misc 
 misc:
 	@> misc.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/miscellaneous -failfast -timeout 0 \
@@ -503,7 +503,7 @@ misc:
 .PHONY: multiclusteringresstests
 multiclusteringresstests:
 	@> multiclusteringresstests.log
-	(sudo docker run \
+	(docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	-v $(PWD):/go/src/$(PACKAGE_PATH_AKO) $(GO_IMG_TEST) \
 	$(GOTEST) -v -mod=vendor $(PACKAGE_PATH_AKO)/tests/multiclusteringresstests -failfast -coverprofile cover-32.out \
@@ -531,7 +531,7 @@ int_test:
 
 .PHONY: scale_test
 scale_test:
-	sudo docker run \
+	docker run \
 	-w=/go/src/$(PACKAGE_PATH_AKO) \
 	--mount type=bind,source=$(TestbedFilePath),target=$(TestbedFilePath) \
 	--mount type=bind,source=$(KubeConfigFileName),target=$(KubeConfigFileName) \
