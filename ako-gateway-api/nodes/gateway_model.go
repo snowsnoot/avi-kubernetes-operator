@@ -233,6 +233,15 @@ func BuildVsVipNodeForGateway(key string, gateway *gatewayv1.Gateway, parentVsNo
 			vsvipNode.IPv6Address = ipAddr
 		}
 	}
+	if len(gateway.Spec.Addresses) == 2 {
+		ipv4Addr, ipv6Addr := lib.ParseIpString(gateway.Spec.Addresses[0].Value + "," + gateway.Spec.Addresses[1].Value)
+		if net.IsIPv4String(ipv4Addr) {
+			vsvipNode.IPv4Address = ipv4Addr
+		}
+		if net.IsIPv6String(ipv6Addr) {
+			vsvipNode.IPv6Address = ipv6Addr
+		}
+	}
 
 	// This section is currently only applicable to NSX-T cloud in VPC mode.
 	// Allocate public VIP by default

@@ -81,21 +81,36 @@ func IsValidGateway(key string, gateway *gatewayv1.Gateway) (bool, bool) {
 		return false, allowedRoutesAll
 	}
 
-	// has 1 or none addresses
-	if len(spec.Addresses) > 1 {
-		utils.AviLog.Errorf("key: %s, msg: more than 1 gateway address found in gateway %+v", key, gateway.Name)
+	// (has one IPv4 or IPv6 address) or (has one IPv6 and one IPv4 address)
+	if len(spec.Addresses) > 2 {
+		utils.AviLog.Errorf("key: %s, msg: gateway cannot have more than two IPAddress %+v", key, gateway.Name)
 		defaultCondition.
-			Message("More than one address is not supported").
+			Message("More than two IPAddress is not supported").
 			SetIn(&gatewayStatus.Conditions)
 		programmedCondition.
 			Reason(string(gatewayv1.GatewayReasonAddressNotUsable)).
 			SetIn(&gatewayStatus.Conditions)
 		akogatewayapistatus.Record(key, gateway, &status.Status{GatewayStatus: gatewayStatus})
 		return false, allowedRoutesAll
+	} else if len(spec.Addresses) == 2 {
+		ipv4Address, ipv6Address := lib.ParseIpString(spec.Addresses[0].Value + "," + spec.Addresses[1].Value)
+		if ipv4Address == "" || ipv6Address == "" {
+			utils.AviLog.Errorf("key: %s, msg: dual IP gateway must have exactly one IPv4 and one IPv6 IPAddress %+v", key, gateway.Name)
+			defaultCondition.
+				Message("Gateway with two IPAddress must be dual stacked").
+				SetIn(&gatewayStatus.Conditions)
+			programmedCondition.
+				Reason(string(gatewayv1.GatewayReasonAddressNotUsable)).
+				SetIn(&gatewayStatus.Conditions)
+			akogatewayapistatus.Record(key, gateway, &status.Status{GatewayStatus: gatewayStatus})
+			return false, allowedRoutesAll
+		}
 	}
 
-	if len(spec.Addresses) == 1 && *spec.Addresses[0].Type != "IPAddress" {
-		utils.AviLog.Errorf("key: %s, msg: gateway address is not of type IPAddress %+v", key, gateway.Name)
+	if len(spec.Addresses) == 1 && (*spec.Addresses[0].Type != "IPAddress") ||
+		len(spec.Addresses) == 2 &&
+			(*spec.Addresses[0].Type != "IPAddress" || *spec.Addresses[1].Type != "IPAddress") {
+		utils.AviLog.Errorf("key: %s, msg: gateway address(es) is not of type IPAddress %+v", key, gateway.Name)
 		defaultCondition.
 			Reason(string(gatewayv1.GatewayReasonUnsupportedAddress)).
 			Message("Only IPAddress as AddressType is supported").
